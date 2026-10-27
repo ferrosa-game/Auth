@@ -1,0 +1,28 @@
+opencollection: 1.0.0
+
+info:
+  name: Ferrosa Authserver
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  variables:
+    - name: base_url
+      value: http://127.0.0.1:1841
+    - name: auth_token
+      value: IRy6o6ShojKq33fu9AKyApUbvvKgtsil158hs5ddXOw
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

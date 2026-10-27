@@ -1,0 +1,37 @@
+{
+  "name": "authserver",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Ferrosa authentication server",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "tsc src/main.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "dev": "tsx watch --env-file=.env src/main.ts",
+    "start": "node --env-file=.env dist/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "drizzle-kit": "^1.0.0-rc.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@fastify/rate-limit": "^11.2.1",
+    "@fastify/type-provider-typebox": "^6.3.0",
+    "@sinclair/typebox": "^0.34.52",
+    "dotenv": "^18.0.9",
+    "drizzle-orm": "^1.0.0-rc.4",
+    "fastify": "^5.12.7",
+    "pg": "^8.23.1",
+    "resend": "^6.34.1",
+    "svix": "^2.9.1"
+  }
+}
