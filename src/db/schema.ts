@@ -1,4 +1,4 @@
-import { pgTable, timestamp, uuid, text, integer } from "drizzle-orm/pg-core";
+import { pgTable, timestamp, uuid, text, integer, index } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: uuid().primaryKey().defaultRandom(),
@@ -25,13 +25,20 @@ export const sessions = pgTable("sessions", {
 
 export const gameServers = pgTable("game_servers", {
     id: uuid().primaryKey().defaultRandom(),
-    ownerId: uuid().notNull().references(() => usersTable.id, { onDelete: "cascade" }),
-    tokenHash: text().notNull().unique(),
+    listKey: uuid().notNull().references(() => serverlistKeys.id, { onDelete: "cascade" }),
     label: text().notNull(),
     createdAt: timestamp().notNull().defaultNow(),
     lastAddress: text(),
     revokedAt: timestamp()
-})
+}, (t) => [index().on(t.listKey)])
+
+export const serverlistKeys = pgTable("server_list_keys", {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid().notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+    tokenHash: text().notNull().unique(),
+    createdAt: timestamp().notNull().defaultNow(),
+    revokedAt: timestamp()
+}, (t) => [index().on(t.userId)])
 
 export const suppressions = pgTable("suppressions", {
     email: text().primaryKey(),

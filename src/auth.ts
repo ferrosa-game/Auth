@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import db from './db.js'
 import resend, { hasMailServer } from './email.js';
 import { and, eq, gt, lt, sql } from 'drizzle-orm';
+import type { FastifyRequest } from 'fastify';
+import { hashToken } from './tokens.js';
 
 export const authRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     fastify.post("/auth/login", {
@@ -48,6 +50,53 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         }
 
         return res.code(200).send(session);
+    })
+
+    fastify.get("/auth/me", async (req, res) => {
+        const token = bearer(req);
+
+        if (!token) {
+            return res.code(401).send();
+        }
+
+        const [row] = await db.select({
+            sessionId: sessions.id,
+            email: usersTable.email,
+            bannedUntil: usersTable.bannedUntil,
+            expiresAt: sessions.expiresAt,
+            revokedAt: sessions.revokedAt
+        })
+            .from(sessions)
+            .innerJoin(usersTable, eq(sessions.userId, usersTable.id))
+            .where(eq(sessions.tokenHash, hashToken(token)));
+
+        if (!row || row.revokedAt || row.expiresAt < new Date()) {
+            return res.code(401).send();
+        }
+
+        if (row.bannedUntil && row.bannedUntil > new Date()) {
+            throw Object.assign(new Error('banned'), { statusCode: 403 });
+        }
+
+        await db.update(sessions)
+            .set({ lastSeenAt: new Date() })
+            .where(eq(sessions.id, row.sessionId));
+
+        return res.code(200).send({ email: row.email });
+    })
+
+    fastify.post("/auth/logout", async (req, res) => {
+        const token = bearer(req);
+
+        if (!token) {
+            return res.code(401).send();
+        }
+
+        await db.update(sessions)
+            .set({ revokedAt: new Date() })
+            .where(eq(sessions.tokenHash, hashToken(token)));
+
+        return res.code(204).send();
     })
 }
 
@@ -128,4 +177,22 @@ async function verifyLoginCode(email: string, code: string) {
     }
 
     return result;
+}
+
+export function bearer(req: FastifyRequest) {
+    const header = req.headers.authorization;
+
+    if (!header) {
+        return undefined;
+    }
+
+    const [scheme, ...rest] = header.split(' ');
+
+    if (scheme?.toLowerCase() !== 'bearer') {
+        return undefined
+    }
+
+    const token = rest.join(' ').trim();
+
+    return token.length > 0 ? token : undefined;
 }

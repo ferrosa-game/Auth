@@ -15,11 +15,12 @@ config:
       bypassProxy: ""
 
 request:
+  headers:
+    - name: Authorization
+      value: Bearer 6kJMMEhQTZvswbM0EXkYS18KhNRCnDwL9U8iI7QGqF8
   variables:
     - name: base_url
       value: http://127.0.0.1:1841
-    - name: auth_token
-      value: IRy6o6ShojKq33fu9AKyApUbvvKgtsil158hs5ddXOw
 bundled: false
 extensions:
   bruno:

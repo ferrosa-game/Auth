@@ -1,17 +1,11 @@
 info:
-  name: /auth/login
+  name: /serverlist/register
   type: http
   seq: 1
 
 http:
   method: POST
-  url: "{{base_url}}/auth/login"
-  body:
-    type: json
-    data: |-
-      {
-        "email": "infinity@infinity-dev.xyz"
-      }
+  url: "{{base_url}}/serverlist/register"
   auth: inherit
 
 settings:

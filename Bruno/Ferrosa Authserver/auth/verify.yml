@@ -1,7 +1,7 @@
 info:
-  name: /auth/verify
+  name: /verify
   type: http
-  seq: 2
+  seq: 1
 
 http:
   method: POST
@@ -11,7 +11,7 @@ http:
     data: |-
       {
         "email": "infinity@infinity-dev.xyz",
-        "code": 958815
+        "code": 421692
       }
   auth: inherit
 
