@@ -35,6 +35,7 @@ export const gameServers = pgTable("game_servers", {
 export const serverlistKeys = pgTable("server_list_keys", {
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid().notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+    label: text(),
     tokenHash: text().notNull().unique(),
     createdAt: timestamp().notNull().defaultNow(),
     revokedAt: timestamp()

@@ -53,36 +53,9 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     })
 
     fastify.get("/auth/me", async (req, res) => {
-        const token = bearer(req);
+        const user = await requireUser(req);
 
-        if (!token) {
-            return res.code(401).send();
-        }
-
-        const [row] = await db.select({
-            sessionId: sessions.id,
-            email: usersTable.email,
-            bannedUntil: usersTable.bannedUntil,
-            expiresAt: sessions.expiresAt,
-            revokedAt: sessions.revokedAt
-        })
-            .from(sessions)
-            .innerJoin(usersTable, eq(sessions.userId, usersTable.id))
-            .where(eq(sessions.tokenHash, hashToken(token)));
-
-        if (!row || row.revokedAt || row.expiresAt < new Date()) {
-            return res.code(401).send();
-        }
-
-        if (row.bannedUntil && row.bannedUntil > new Date()) {
-            throw Object.assign(new Error('banned'), { statusCode: 403 });
-        }
-
-        await db.update(sessions)
-            .set({ lastSeenAt: new Date() })
-            .where(eq(sessions.id, row.sessionId));
-
-        return res.code(200).send({ email: row.email });
+        return res.code(200).send({ email: user.email });
     })
 
     fastify.post("/auth/logout", async (req, res) => {
@@ -195,4 +168,38 @@ export function bearer(req: FastifyRequest) {
     const token = rest.join(' ').trim();
 
     return token.length > 0 ? token : undefined;
+}
+
+export async function requireUser(req: FastifyRequest) {
+    const token = bearer(req);
+
+    if (!token) {
+        throw Object.assign(new Error('no session token'), { statusCode: 401 });
+    }
+
+    const [row] = await db.select({
+        sessionId: sessions.id,
+        userId: usersTable.id,
+        email: usersTable.email,
+        bannedUntil: usersTable.bannedUntil,
+        expiresAt: sessions.expiresAt,
+        revokedAt: sessions.revokedAt
+    })
+        .from(sessions)
+        .innerJoin(usersTable, eq(sessions.userId, usersTable.id))
+        .where(eq(sessions.tokenHash, hashToken(token)));
+
+    if (!row || row.revokedAt || row.expiresAt < new Date()) {
+        throw Object.assign(new Error('bad session token'), { statusCode: 401 });
+    }
+
+    if (row.bannedUntil && row.bannedUntil > new Date()) {
+        throw Object.assign(new Error('banned'), { statusCode: 403 });
+    }
+
+    await db.update(sessions)
+        .set({ lastSeenAt: new Date() })
+        .where(eq(sessions.id, row.sessionId));
+
+    return { userId: row.userId, email: row.email };
 }
