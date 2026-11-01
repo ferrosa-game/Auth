@@ -17,7 +17,7 @@ config:
 request:
   headers:
     - name: Authorization
-      value: Bearer 6kJMMEhQTZvswbM0EXkYS18KhNRCnDwL9U8iI7QGqF8
+      value: Bearer {{token}}
   variables:
     - name: base_url
       value: http://127.0.0.1:1841
